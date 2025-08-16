@@ -9,13 +9,13 @@ const MOVIES = [ { id: 1, title: "Whispers in the Attic", year: 2024, genre: "Su
 
 function ScorePill({ label, score, icon: Icon }) { const tone = score >= 80 ? "bg-green-500/20 text-green-300 border-green-600/40" : score >= 60 ? "bg-yellow-500/20 text-yellow-200 border-yellow-600/40" : "bg-red-500/20 text-red-200 border-red-600/40"; return ( <div className={cx("flex items-center gap-1 rounded-full border px-2 py-1 text-xs", tone)}> <Icon className="h-3.5 w-3.5" /> <span className="font-medium">{label} {score}</span> </div> ); }
 
-function Poster({ src, alt }) { return ( <div className="relative aspect-[3/4] overflow-hidden rounded-xl"> <img src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /> </div> ); }
+function Poster({ src, alt }) { return ( <div className="relative aspect-[3/4] overflow-hidden rounded-xl"> <img src={src} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /> </div> ); }
 
 function NeonDivider() { return <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-500/40 to-transparent" />; }
 
 // --- Component --------------------------------------------------------------- export default function HorrorReviewLanding() { const [query, setQuery] = useState(""); const [genre, setGenre] = useState("all"); const [sort, setSort] = useState("trending"); const [dark, setDark] = useState(true); const [spoilerSafe, setSpoilerSafe] = useState(true);
 
-const filtered = useMemo(() => { let list = MOVIES.filter(m => (genre === "all" ? true : m.genre === genre)); if (query) list = list.filter(m => m.title.toLowerCase().includes(query.toLowerCase())); switch (sort) { case "critic": list = [...list].sort((a, b) => b.criticScore - a.criticScore); break; case "user": list = [...list].sort((a, b) => b.userScore - a.userScore); break; case "new": list = [...list].sort((a, b) => b.year - a.year); break; default: list = [...list]; } return list; }, [query, genre, sort]);
+const filtered = useMemo(() => { let list = MOVIES.filter(m => (genre === "all" ? true : m.genre === genre)); const q = query.trim().toLowerCase(); if (q) list = list.filter(m => [m.title, m.genre, String(m.year), ...(Array.isArray(m.tags) ? m.tags : [])].join(" ").toLowerCase().includes(q)); switch (sort) { case "trending": list = [...list].sort((a, b) => (b.criticScore + b.userScore) - (a.criticScore + a.userScore) || (b.year - a.year)); break; case "critic": list = [...list].sort((a, b) => b.criticScore - a.criticScore); break; case "user": list = [...list].sort((a, b) => b.userScore - a.userScore); break; case "new": list = [...list].sort((a, b) => b.year - a.year); break; default: list = [...list]; } return list; }, [query, genre, sort]);
 
 return ( <div className={cx("min-h-screen font-sans antialiased", dark ? "dark" : "")}> <div className="relative isolate overflow-hidden bg-[#0a0a0a] text-zinc-200"> {/* Neon fog bg */} <div className="pointer-events-none absolute inset-0 -z-10"> <div className="absolute -top-32 left-1/3 h-96 w-96 rounded-full bg-fuchsia-500/20 blur-3xl" /> <div className="absolute bottom-0 right-1/4 h-[28rem] w-[28rem] rounded-full bg-indigo-600/20 blur-3xl" /> <div className="absolute -left-24 top-32 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl" /> <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(255,255,255,0.08),transparent_60%)]" /> </div>
 
@@ -76,7 +76,7 @@ return ( <div className={cx("min-h-screen font-sans antialiased", dark ? "dark" 
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search titles, directors, or tags…"
+                placeholder="Search titles, tags, or genres…"
                 className="pl-9"
               />
             </div>
