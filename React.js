@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from "react"; import { motion } from "framer-motion"; import { Ghost, Film, Flame, Star, Sparkles, Search, Filter, ChevronRight, Moon, Sun } from "lucide-react"; import { Button } from "@/components/ui/button"; import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; import { Badge } from "@/components/ui/badge"; import { Input } from "@/components/ui/input"; import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"; import { Switch } from "@/components/ui/switch";
+import React, { useMemo, useState } from "react"; import { motion } from "framer-motion"; import { Ghost, Film, Flame, Star, Sparkles, Search, Filter, ChevronRight, Moon, Sun } from "lucide-react"; import { Button } from "@/components/ui/button"; import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; import { Badge } from "@/components/ui/badge"; import { Input } from "@/components/ui/input"; import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"; import { Switch } from "@/components/ui/switch";
 
 // --- Dummy Data -------------------------------------------------------------- const GENRES = ["Psychological", "Supernatural", "Slasher", "Found Footage", "Folk Horror", "Creature Feature", "Zombie", "Gothic"];
 
@@ -9,7 +9,34 @@ const MOVIES = [ { id: 1, title: "Whispers in the Attic", year: 2024, genre: "Su
 
 function ScorePill({ label, score, icon: Icon }) { const tone = score >= 80 ? "bg-green-500/20 text-green-300 border-green-600/40" : score >= 60 ? "bg-yellow-500/20 text-yellow-200 border-yellow-600/40" : "bg-red-500/20 text-red-200 border-red-600/40"; return ( <div className={cx("flex items-center gap-1 rounded-full border px-2 py-1 text-xs", tone)}> <Icon className="h-3.5 w-3.5" /> <span className="font-medium">{label} {score}</span> </div> ); }
 
-function Poster({ src, alt }) { return ( <div className="relative aspect-[3/4] overflow-hidden rounded-xl"> <img src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /> </div> ); }
+function Poster({ src, alt }) {
+  // Input validation and sanitization
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return url.startsWith('https://') || url.startsWith('http://');
+    } catch {
+      return false;
+    }
+  };
+
+  const sanitizedSrc = isValidUrl(src) ? src : '';
+  const sanitizedAlt = typeof alt === 'string' ? alt.slice(0, 100) : ''; // Limit alt text length
+
+  return (
+    <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+      <img 
+        src={sanitizedSrc} 
+        alt={sanitizedAlt} 
+        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        onError={(e) => {
+          e.target.style.display = 'none';
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+    </div>
+  );
+}
 
 function NeonDivider() { return <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-500/40 to-transparent" />; }
 
@@ -29,12 +56,12 @@ return ( <div className={cx("min-h-screen font-sans antialiased", dark ? "dark" 
         </div>
         <nav className="hidden items-center gap-6 md:flex">
           {[
-            { label: "Home", icon: Film },
-            { label: "Reviews", icon: Star },
-            { label: "Lists", icon: Flame },
-            { label: "Trailers", icon: Sparkles },
-          ].map(({ label, icon: Icon }) => (
-            <a key={label} href="#" className="group inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-white">
+            { id: "home", label: "Home", icon: Film },
+            { id: "reviews", label: "Reviews", icon: Star },
+            { id: "lists", label: "Lists", icon: Flame },
+            { id: "trailers", label: "Trailers", icon: Sparkles },
+          ].map(({ id, label, icon: Icon }) => (
+            <a key={id} href="#" className="group inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-white">
               <Icon className="h-4 w-4 opacity-70 transition group-hover:opacity-100" />
               {label}
             </a>
