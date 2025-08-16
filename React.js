@@ -3,19 +3,75 @@ import { useMemo, useState } from "react"; import { motion } from "framer-motion
 
 // --- Dummy Data -------------------------------------------------------------- const GENRES = ["Psychological", "Supernatural", "Slasher", "Found Footage", "Folk Horror", "Creature Feature", "Zombie", "Gothic"];
 
-const MOVIES = [ { id: 1, title: "Whispers in the Attic", year: 2024, genre: "Supernatural", poster: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1200&auto=format&fit=crop", criticScore: 84, userScore: 78, tags: ["Haunted House", "Slow Burn", "Atmospheric"], blurb: "When a family inherits a creaking mansion, a child's whisper becomes a warning none should ignore.", }, { id: 2, title: "Static", year: 2023, genre: "Found Footage", poster: "https://images.unsplash.com/photo-1486693326701-1ea358b19e1d?q=80&w=1200&auto=format&fit=crop", criticScore: 72, userScore: 81, tags: ["Analog Horror", "VHS", "Cult"], blurb: "A college crew documents dead air after midnight and tunes into something that answers back.", }, { id: 3, title: "Pale Harvest", year: 2022, genre: "Folk Horror", poster: "https://images.unsplash.com/photo-1473172707857-f9e276582ab6?q=80&w=1200&auto=format&fit=crop", criticScore: 90, userScore: 86, tags: ["Ritual", "Rural", "Wicker"], blurb: "A village celebrates the season with a ritual no outsider survives to describe.", }, { id: 4, title: "Nine Cuts", year: 2025, genre: "Slasher", poster: "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1200&auto=format&fit=crop", criticScore: 61, userScore: 74, tags: ["Neo-Slasher", "Practical FX", "Camp"], blurb: "An editor discovers frames spliced into her film that predict real murders—hers is the final cut.", }, ];
+const MOVIES = [ { id: 1, title: "Whispers in the Attic", year: 2024, genre: "Supernatural", poster: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=1200&auto=format&fit=crop", criticScore: 84, userScore: 78, tags: ["Haunted House", "Slow Burn", "Atmospheric"], blurb: "When a family inherits a creaking mansion, a child's whisper becomes a warning none should ignore.", spoilerBlurb: "The child's whisper reveals the family's tragic past—they died in the house 50 years ago and are now trapped forever.", hasSpoilers: true }, { id: 2, title: "Static", year: 2023, genre: "Found Footage", poster: "https://images.unsplash.com/photo-1486693326701-1ea358b19e1d?q=80&w=1200&auto=format&fit=crop", criticScore: 72, userScore: 81, tags: ["Analog Horror", "VHS", "Cult"], blurb: "A college crew documents dead air after midnight and tunes into something that answers back.", spoilerBlurb: "The static reveals an ancient cult's transmission that possesses anyone who hears the complete message.", hasSpoilers: true }, { id: 3, title: "Pale Harvest", year: 2022, genre: "Folk Horror", poster: "https://images.unsplash.com/photo-1473172707857-f9e276582ab6?q=80&w=1200&auto=format&fit=crop", criticScore: 90, userScore: 86, tags: ["Ritual", "Rural", "Wicker"], blurb: "A village celebrates the season with a ritual no outsider survives to describe.", spoilerBlurb: "The ritual requires a human sacrifice—the protagonist discovers they were lured to be this year's offering.", hasSpoilers: true }, { id: 4, title: "Nine Cuts", year: 2025, genre: "Slasher", poster: "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1200&auto=format&fit=crop", criticScore: 61, userScore: 74, tags: ["Neo-Slasher", "Practical FX", "Camp"], blurb: "An editor discovers frames spliced into her film that predict real murders—hers is the final cut.", spoilerBlurb: "The editor is actually the killer's next victim—the spliced frames show her own impending death.", hasSpoilers: true }, ];
 
 // --- Utility ---------------------------------------------------------------- const cx = (...classes) => classes.filter(Boolean).join(" ");
 
 function ScorePill({ label, score, icon: Icon }) { const tone = score >= 80 ? "bg-green-500/20 text-green-300 border-green-600/40" : score >= 60 ? "bg-yellow-500/20 text-yellow-200 border-yellow-600/40" : "bg-red-500/20 text-red-200 border-red-600/40"; return ( <div className={cx("flex items-center gap-1 rounded-full border px-2 py-1 text-xs", tone)}> <Icon className="h-3.5 w-3.5" /> <span className="font-medium">{label} {score}</span> </div> ); }
 
-function Poster({ src, alt }) { return ( <div className="relative aspect-[3/4] overflow-hidden rounded-xl"> <img src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /> </div> ); }
+function Poster({ src, alt }) { 
+  const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
+  
+  const handleImageError = () => {
+    setImageError(true);
+    setIsLoading(false);
+  };
+  
+  return ( 
+    <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-zinc-800"> 
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-800">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-fuchsia-500 border-t-transparent"></div>
+        </div>
+      )}
+      {imageError ? (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 text-center">
+          <Film className="h-12 w-12 text-fuchsia-400/60 mb-2" />
+          <span className="text-sm text-zinc-400 font-medium">{alt}</span>
+          <span className="text-xs text-zinc-500 mt-1">Image unavailable</span>
+        </div>
+      ) : (
+        <img 
+          src={src} 
+          alt={alt} 
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          style={{ display: isLoading ? 'none' : 'block' }}
+        />
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" /> 
+    </div> 
+  ); 
+}
 
 function NeonDivider() { return <div className="h-px w-full bg-gradient-to-r from-transparent via-fuchsia-500/40 to-transparent" />; }
 
 // --- Component --------------------------------------------------------------- export default function HorrorReviewLanding() { const [query, setQuery] = useState(""); const [genre, setGenre] = useState("all"); const [sort, setSort] = useState("trending"); const [dark, setDark] = useState(true); const [spoilerSafe, setSpoilerSafe] = useState(true);
 
-const filtered = useMemo(() => { let list = MOVIES.filter(m => (genre === "all" ? true : m.genre === genre)); if (query) list = list.filter(m => m.title.toLowerCase().includes(query.toLowerCase())); switch (sort) { case "critic": list = [...list].sort((a, b) => b.criticScore - a.criticScore); break; case "user": list = [...list].sort((a, b) => b.userScore - a.userScore); break; case "new": list = [...list].sort((a, b) => b.year - a.year); break; default: list = [...list]; } return list; }, [query, genre, sort]);
+const filtered = useMemo(() => { 
+  let list = MOVIES.filter(m => (genre === "all" ? true : m.genre === genre)); 
+  if (query) list = list.filter(m => m.title.toLowerCase().includes(query.toLowerCase())); 
+  
+  // Apply spoiler-safe filtering by modifying blurb content
+  list = list.map(movie => ({
+    ...movie,
+    blurb: spoilerSafe && movie.hasSpoilers ? movie.blurb : (movie.spoilerBlurb || movie.blurb)
+  }));
+  
+  switch (sort) { 
+    case "critic": list = [...list].sort((a, b) => b.criticScore - a.criticScore); break; 
+    case "user": list = [...list].sort((a, b) => b.userScore - a.userScore); break; 
+    case "new": list = [...list].sort((a, b) => b.year - a.year); break; 
+    default: list = [...list]; 
+  } 
+  return list; 
+}, [query, genre, sort, spoilerSafe]);
 
 return ( <div className={cx("min-h-screen font-sans antialiased", dark ? "dark" : "")}> <div className="relative isolate overflow-hidden bg-[#0a0a0a] text-zinc-200"> {/* Neon fog bg */} <div className="pointer-events-none absolute inset-0 -z-10"> <div className="absolute -top-32 left-1/3 h-96 w-96 rounded-full bg-fuchsia-500/20 blur-3xl" /> <div className="absolute bottom-0 right-1/4 h-[28rem] w-[28rem] rounded-full bg-indigo-600/20 blur-3xl" /> <div className="absolute -left-24 top-32 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl" /> <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(255,255,255,0.08),transparent_60%)]" /> </div>
 
@@ -41,8 +97,15 @@ return ( <div className={cx("min-h-screen font-sans antialiased", dark ? "dark" 
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Switch checked={dark} onCheckedChange={setDark} aria-label="Toggle dark mode" />
-          <span className="sr-only">Toggle theme</span>
+          <div className="flex items-center gap-2 rounded-lg border border-fuchsia-600/30 bg-black/30 p-2">
+            {dark ? (
+              <Moon className="h-4 w-4 text-fuchsia-300" />
+            ) : (
+              <Sun className="h-4 w-4 text-yellow-400" />
+            )}
+            <Switch checked={dark} onCheckedChange={setDark} aria-label="Toggle dark mode" />
+            <span className="text-xs text-zinc-300">{dark ? 'Dark' : 'Light'}</span>
+          </div>
           <Button variant="secondary" className="rounded-2xl">Sign In</Button>
         </div>
       </div>
